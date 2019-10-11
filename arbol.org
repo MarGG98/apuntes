@@ -1,0 +1,425 @@
+#+title: Árbol generador de menor costo
+
+#+options: toc:nil
+
+#+latex_header: \usepackage{listings}
+#+latex_header: \lstalias{ipython}{python}
+#+latex_header: \lstset{basicstyle=\small\ttfamily, frame=single}
+
+#+latex_header: \usepackage{bera}
+
+#+property: header-args:ipython :exports both :cache yes :session arbol :results raw drawer
+
+* Problema
+
+Supongamos que a cada arista de la grafica completa \K_{n}\ se le asigna un valor ("peso").
+Si a cada subgráfica le asignamos un peso igual a la suma de los pesos de sus aristas, consideraremos 
+el problema de encontrar el árbol generador de menor peso.
+
+* Algoritmo de Kruskal 
+
+El algoritmo de Kruskal consiste en escoger sucesivamente las aristas más baratas con tal deqno formen
+ ciclos con las aristas escogidas previamente.En una gráifca con \(n\) vértices se puede demostrar que
+tal algoritmo termina cando hayamos escogido \(n-1\) aristas, y que el árbol así construido es tal que
+tiene costo mínimo.
+
+* Implementación
+
+Primeramente vamos a importar las bibliotecas que vamos a utilizar 
+
+#+begin_src ipython 
+import networkx as nx
+import matplotlib.pyplot as plt
+from random import random as random
+from scipy.spatial.distance import euclidean
+#+end_src
+
+#+RESULTS[2a253d47c089a054eb3655b60d8ccea8fad581c9]:
+:results:
+# Out[1]:
+:end:
+
+A continuación definiremos una gráfica aleatoria con 10 vértices
+
+#+begin_src ipython
+g=nx.gnp_random_graph(10, 0.2)
+#+end_src
+
+#+RESULTS[686d2b8b58905b6e9c928e84fd5489c436bec335]:
+:results:
+# Out[3]:
+:end:
+
+Veremos si nuestra gráfica es un bosque.
+
+#+begin_src ipython
+nx.is_forest(g), nx.is_connected(g)
+#+end_src
+
+#+RESULTS[e7d1dbb3a296c52111081a2873e11b0c5e1bcb99]:
+:results:
+# Out[4]:
+: (True, False)
+:end:
+
+A continuación dibujaremos esta gráfica.
+
+#+begin_src ipython
+nx.draw(g, with_labels=True)
+#+end_src
+
+#+RESULTS[7a5a44e71604efbb3ac02fd3863ef7628a5be23d]:
+:results:
+# Out[5]:
+[[file:./obipy-resources/2629GNB.png]]
+:end:
+
+Calcularemos las componentes conexas de esta gráfica:
+
+#+begin_src ipython
+list(nx.connected_components(g))
+#+end_src
+
+#+RESULTS[fd43bac86ab4e6adb6ece858cb2c922a37acadb0]:
+:results:
+# Out[6]:
+: [{0}, {1, 5, 7}, {2}, {3, 4, 9}, {6}, {8}]
+:end:
+
+Veamos la componente que contiene al vértice 1.
+
+#+begin_src ipython
+nx.node_connected_component(g, 1)
+#+end_src
+
+#+RESULTS[be13b73df32134c77fb39c83a78ad0ad6a903054]:
+:results:
+# Out[7]:
+: {1, 5, 7}
+:end:
+
+A continuación dibujaremos un árbol escogido aleatoriamente.
+
+#+begin_src ipython
+t=nx.random_tree(10)
+nx.draw(t, with_labels=True)
+#+end_src
+
+#+RESULTS[40cadd15ea973ae0dd4c6e9ce48469aa6584d9b0]:
+:results:
+# Out[8]:
+[[file:./obipy-resources/2629TXH.png]]
+:end:
+
+* Puntos en el plano
+
+Si tenemos dos listas de números de tamaño =n=, podemos dibujar =n= puntos en el plano,
+tomando las coordenadas =x= de la primera lista y las coordenadas =y= de la segunda.
+
+#+begin_src ipython
+plt.plot([1,1,2],[1,2,3],'bx')
+plt.axis([0,3,0,4])
+plt.show()
+#+end_src
+
+#+RESULTS[a2473dc10d4388557d58b145c3b398832095523d]:
+:results:
+# Out[3]:
+[[file:./obipy-resources/1849pQt.png]]
+:end:
+
+Vamos a definir una función que dibuje =n= puntos en el plano aleatoriamente.
+
+#+begin_src ipython
+def puntos_en_el_plano(n):
+    listax=[]
+    listay=[]
+    for i in range(n):
+        listax.append(random())
+        listay.append(random())
+    return listax, listay
+#+end_src
+
+#+RESULTS[1cddae6365e0c7df4eef77ad1b5bc8bbf58f96c2]:
+:results:
+# Out[4]:
+:end:
+
+#+begin_src ipython
+puntos=puntos_en_el_plano(50)
+puntos
+#+end_src
+
+#+RESULTS[2de7274bacd85fdac8ce475bf9077286f1f6673a]:
+:results:
+# Out[5]:
+#+BEGIN_EXAMPLE
+  ([0.7798093668522394,
+  0.9591515513965369,
+  0.2024246486207033,
+  0.19110054966948142,
+  0.5823560961136317,
+  0.9700419651734092,
+  0.02870038279796605,
+  0.4903341891278832,
+  0.710285995941868,
+  0.916526816660731,
+  0.7362237691131144,
+  0.5089031624924589,
+  0.5490929994560475,
+  0.6292338192781676,
+  0.24752217328400505,
+  0.7102004047738801,
+  0.01311465679884627,
+  0.7606798623709284,
+  0.8745736715810971,
+  0.9025895495966143,
+  0.24331823395307772,
+  0.6851214438058932,
+  0.055102650974040435,
+  0.5744711026775111,
+  0.9008445818915313,
+  0.21147720546767534,
+  0.9585654671902513,
+  0.3839303032841075,
+  0.7563395812092334,
+  0.8735277501734413,
+  0.7996125024035047,
+  0.08814125109157145,
+  0.14228221811240127,
+  0.4010945473115457,
+  0.3771821171201296,
+  0.3712770850101793,
+  0.3039673407901925,
+  0.8691480329618195,
+  0.42702353992743125,
+  0.9140965296013078,
+  0.2513375484547592,
+  0.1693232302769443,
+  0.4170320280296639,
+  0.8650813126003842,
+  0.788300676641321,
+  0.6224636069846973,
+  0.33975660754301906,
+  0.1876458687750292,
+  0.2908117984549532,
+  0.8728460181181228],
+  [0.0959643936105028,
+  0.3151422809911555,
+  0.009739808824994367,
+  0.21954303497324346,
+  0.6625917054753742,
+  0.19184456218584778,
+  0.807687587089618,
+  0.024375489578353116,
+  0.286236845122227,
+  0.15000775788942733,
+  0.5852431595367295,
+  0.9596684250499082,
+  0.5547718011911198,
+  0.9542022428559155,
+  0.813651077019746,
+  0.8923116559892912,
+  0.5624043288903656,
+  0.6498185611273674,
+  0.09211089395962402,
+  0.09032390788126843,
+  0.9356141683882233,
+  0.8042921293267948,
+  0.4350445995777956,
+  0.22919558910040116,
+  0.8289431265412752,
+  0.7038076884837206,
+  0.2421504810008105,
+  0.6605686285043908,
+  0.7952920619428565,
+  0.6093759441966303,
+  0.9320658625128814,
+  0.9889058177613033,
+  0.2938123249139213,
+  0.144842325508856,
+  0.4780670911414463,
+  0.6855245860268155,
+  0.16201763559851934,
+  0.4329445409101681,
+  0.05524262129113777,
+  0.7178666461947287,
+  0.01556667624109187,
+  0.16446238329707863,
+  0.7986065172652844,
+  0.6051624008620577,
+  0.07233759370843462,
+  0.013401207926554082,
+  0.8231259156419808,
+  0.9366504771049661,
+  0.8177321403151653,
+  0.25761549467558287])
+#+END_EXAMPLE
+:end:
+
+#+begin_src ipython
+plt.plot(*puntos, 'ro')
+plt.show()
+#+end_src
+
+#+RESULTS[3e875b45815176da72d413ae26cf591eba8c559f]:
+:results:
+# Out[18]:
+[[file:./obipy-resources/2629HAg.png]]
+:end:
+
+Hagamos una función tal que, a partir de dos listas, produzca el dibujo:
+
+#+begin_src ipython
+def dibujo_puntos(listax, listay):
+    plt.plot(listax, listay, 'ro')
+    plt.axis([-0.1,1.1,-0.1,1.1])
+    plt.gca().set_aspect('equal')
+    plt.show()
+#+end_src
+
+#+RESULTS[b62c33bac294c25d54476a3d29ed7d0fda02559e]:
+:results:
+# Out[6]:
+:end:
+
+#+begin_src ipython
+dibujo_puntos(*puntos)
+#+end_src
+
+#+RESULTS[274d1e4a2e4c1e9a72c9f464a39ff8637dd52977]:
+:results:
+# Out[7]:
+[[file:./obipy-resources/18492az.png]]
+:end:
+
+* Distancia euclidiana
+#+begin_src ipython
+a = (0,0)
+b = (3,5)
+euclidean(a,b)
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[8]:
+: 5.830951894845301
+:end:
+
+* Grafica con pesos
+En =network= se puede consideras grafica donde cada arista tiene un peso.
+Por ejemplo:
+#+begin_src ipython
+g = nx.Graph()
+g.add_nodes_from(["a","b","c"])
+g.add_weighted_edges_from([("a","b",2), ("a","c",0.5)])
+position=nx.spring_layout(g)
+nx.draw_networkx_edge_labels(g, pos=position)
+nx.draw(g, with_labels=True, pos=position)
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[12]:
+[[file:./obipy-resources/1849okC.png]]
+:end:
+
+definimos ahora una funcion que, dadas dos listas de numeros, produzca una grafica con pesos donde los vertices
+sean los puntos y el peso entre dos puntos culaesquiera sea la distancia euclidianaaaaaaa.
+
+#+begin_src ipython
+def grafica_euclidiana(listax, listay):
+    G = nx.Graph()
+    n = len(listax)
+    vertices = []
+    for i in range(n):
+        vertices.append((listax[i], listay[i]))
+    aristas = []
+    for i in range(n):
+        for j in range(i+1,n):
+            u = vertices[i]
+            v = vertices[j]
+            aristas.append((u, v, euclidean(u, v)))
+    G.add_nodes_from(vertices)
+    G.add_weighted_edges_from(aristas)
+    return G
+#+end_src
+
+#+RESULTS[34bd06be40179732d0d925e4b7a32378b3375400]:
+:results:
+# Out[17]:
+:end:
+
+#+begin_src ipython
+g = grafica_euclidiana(*puntos)
+#+end_src
+
+#+RESULTS[b00a44048d18abb76a1381ea87ba23400f94169a]:
+:results:
+# Out[19]:
+:end:
+
+#+begin_src ipython
+def arbol_menor_costo(G):
+    T = nx.Graph()
+    T.add_nodes_from(G)
+    aristas = list(G.edges(data = True))
+    aristas = sorted(aristas, key = lambda e: -e[2]['weight'])
+    while len(T.edges()) < len(G)-1:
+        e = aristas.pop()
+        if not(e[0] in nx.node_connected_component(T, e[1])):
+            T.add_edge(e[0], e[1])
+    return T
+#+end_src
+
+#+RESULTS[6101b4e0e24b93a9270a473d192f897e1b8dae9a]:
+:results:
+# Out[20]:
+:end:
+
+#+begin_src ipython
+plt.figure(figsize=(10,10))
+t = arbol_menor_costo(g)
+nx.draw(t)
+#+end_src
+
+#+RESULTS[77048bae145d8e1808e521d023fda82929eaf8e5]:
+:results:
+# Out[25]:
+[[file:./obipy-resources/1849C5O.png]]
+:end:
+
+
+
+#+begin_src ipython
+plt.figure(figsize=(10,10))
+
+for v in t.nodes():
+    plt.plot(v[0], v[1],'ro')
+
+for e in t.edges():
+    p1 = e[0]
+    p2 = e[1]
+    plt.plot([p1[0], p2[0]], [p1[1], p2[1]], color='blue')
+
+plt.axis([-0.1, 1.1, -0.1, 1.1])
+plt.gca().set_aspect('equal')
+
+plt.show()
+#+end_src
+
+#+RESULTS:
+:results:
+# Out[24]:
+[[file:./obipy-resources/18491uI.png]]
+:end:
+
+
+
+#+end_src
+
+
+
+# Local Variables:
+# org-confirm-babel-evaluate: nil
+# End:
